@@ -1,7 +1,9 @@
 from unittest import TestCase, main
 import json
+import jwt
+from time import time
 
-from app import app
+from app import app, SECRET
 
 
 # sets the app to testing mode
@@ -16,15 +18,33 @@ class TestProxy(TestCase):
     def test_can_append_request(self):
         with app.test_client() as client:
             # send data as POST form to endpoint
-            sent = {'return_url': 'my_test_url'}
-            result = client.post(
-                '/',
-                data=sent,
-            )
-            # check result from server with expected data
+            expected = {'return_url': 'my_test_url'}
+            raw_result = client.post('/', data=expected)
+            result = json.loads(raw_result.data.decode("utf-8"))
+
+            # checking if appended JWT is correct
+            appendix = jwt.decode(result['x-my-jwt'], SECRET, algorithms=['HS512'])
+            iat = appendix['iat']
+            jti = appendix['jti']
+            payload = appendix['payload']
             self.assertEqual(
-                result.data.decode("utf-8"),
-                json.dumps(sent)
+                type(iat),
+                int,
+            )
+            self.assertEqual(
+                type(jti),
+                int,
+            )
+            self.assertEqual(
+                json.dumps(payload),
+                json.dumps({"user": "username", "date": "todays date"}),
+            )
+
+            # checking if remaining payload is intact
+            del result['x-my-jwt']
+            self.assertEqual(
+                json.dumps(result),
+                json.dumps(expected),
             )
 
 
