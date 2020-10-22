@@ -7,3 +7,6 @@ build:
 
 run:
 	flask run
+
+test:
+	python -m unittest test.py
