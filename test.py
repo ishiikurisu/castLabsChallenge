@@ -2,6 +2,7 @@ from unittest import TestCase, main
 import json
 import jwt
 from time import time
+from datetime import datetime
 
 from app import app, SECRET
 
@@ -23,7 +24,11 @@ class TestProxy(TestCase):
             result = json.loads(raw_result.data.decode("utf-8"))
 
             # checking if appended JWT is correct
-            appendix = jwt.decode(result['x-my-jwt'], SECRET, algorithms=['HS512'])
+            appendix = jwt.decode(
+                result['x-my-jwt'],
+                SECRET,
+                algorithms=['HS512'],
+            )
             iat = appendix['iat']
             jti = appendix['jti']
             payload = appendix['payload']
@@ -37,7 +42,10 @@ class TestProxy(TestCase):
             )
             self.assertEqual(
                 json.dumps(payload),
-                json.dumps({"user": "username", "date": "todays date"}),
+                json.dumps({
+                    "user": "username",
+                    "date": datetime.now().strftime("%Y-%m-%d"),
+                }),
             )
 
             # checking if remaining payload is intact
