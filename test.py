@@ -44,22 +44,27 @@ class TestProxy(TestCase):
         self.verify_appendix(appendix)
 
     def test_can_append_request(self):
+        # POSTing this URL should return name, job, id, and createdAt
+        url = "https://reqres.in/api/users"
+
         data = {
             "name": "Sponge Bob",
             "job": "Cook",
         }
 
-        # making test request
-        expected = post(UPSTREAM, data=data)
+        expected = post(url, data=data)
 
-        with app.test_client() as client:
-            # send data as POST form to endpoint
-            result = client.post('/', data=data)
+        result = proxy_post(url=url, data=data, headers=None)
 
-            # TODO verify response to see if they are the same
+        self.assertEqual(expected.status_code, result.status_code)
+        expected_data = json.loads(expected.text)
+        result_data = json.loads(result.data.decode("UTF-8"))
+        self.assertEqual(expected_data['name'], result_data['name'])
+        self.assertEqual(expected_data['job'], result_data['job'])
+        self.assertEqual(data['name'], result_data['name'])
+        self.assertEqual(data['job'], result_data['job'])
 
-            # verifying header
-            self.verify_appendix(result.headers['x-my-jwt'])
+        self.verify_appendix(result.headers['x-my-jwt'])
 
     def test_generate_cryptographic_nonces(self):
         previous_nonce = None

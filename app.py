@@ -6,6 +6,7 @@ from random import randint
 from flask import (
     Flask,
     request,
+    Response,
 )
 import jwt
 from requests import post
@@ -13,7 +14,7 @@ from requests import post
 
 SECRETS = dict()
 SECRET = "TODO LOAD SECRET"
-UPSTREAM = "https://reqres.in/api/users"
+UPSTREAM = "TODO LOAD UPSTREAM"
 with open("./config/secrets.json") as fp:
     SECRETS = json.loads(fp.read())
     SECRET = SECRETS.get('JWT_SECRET', 'FAILED TO LOAD SECRET')
@@ -38,18 +39,26 @@ def generate_jwt_appendix():
     return jwt.encode(appendix, SECRET, algorithm='HS512')
 
 
-@app.route('/', methods=['POST'])
-def index():
+def proxy_post(url, data, headers):
     # generating response
-    response = post(UPSTREAM, data=request.data, headers=request.headers)
+    response = post(url, data=data, headers=headers)
 
     # appending header to response
     response.headers['x-my-jwt'] = generate_jwt_appendix()
 
-    return (
-        response.content,
-        response.status_code,
-        response.headers.items(),
+    return Response(
+        response=response.content,
+        status=response.status_code,
+        headers=response.headers.items(),
+    )
+
+
+@app.route('/', methods=['POST'])
+def index():
+    return proxy_post(
+        url=UPSTREAM,
+        data=request.data,
+        headers=request.headers,
     )
 
 
