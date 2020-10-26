@@ -4,6 +4,7 @@ from datetime import datetime
 from random import randint
 
 from flask import (
+    jsonify,
     Flask,
     request,
     Response,
@@ -15,6 +16,8 @@ from requests import post
 SECRETS = dict()
 SECRET = "TODO LOAD SECRET"
 UPSTREAM = "TODO LOAD UPSTREAM"
+FROM_START = time()
+PROCESSED_REQUESTS = 0
 with open("./config/secrets.json") as fp:
     SECRETS = json.loads(fp.read())
     SECRET = SECRETS.get('JWT_SECRET', 'FAILED TO LOAD SECRET')
@@ -53,6 +56,14 @@ def proxy_post(url, data, headers):
     )
 
 
+def increment_processed_requests(f):
+    def inner():
+        PROCESSED_REQUESTS += 1
+        return f
+    return inner
+
+
+@increment_processed_requests
 @app.route('/', methods=['POST'])
 def index():
     return proxy_post(
@@ -60,6 +71,15 @@ def index():
         data=request.data,
         headers=request.headers,
     )
+
+
+@increment_processed_requests
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({
+        "from_start": time() - FROM_START,
+        "processed_requests": PROCESSED_REQUESTS,
+    })
 
 
 if __name__ == '__main__':
