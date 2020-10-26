@@ -4,6 +4,8 @@ import jwt
 from time import time
 from datetime import datetime
 
+from requests import post
+
 from app import *
 
 
@@ -16,44 +18,48 @@ class TestProxy(TestCase):
     def setup(self):
         pass
 
+    def verify_appendix(self, appendix):
+        result = jwt.decode(
+            generate_jwt_appendix(),
+            SECRET,
+            algorithms=['HS512'],
+        )
+
+        iat = result['iat']
+        jti = result['jti']
+        payload = result['payload']
+
+        self.assertEqual(type(iat), int)
+        self.assertEqual(type(jti), str)
+        self.assertEqual(
+            json.dumps(payload),
+            json.dumps({
+                "user": "username",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+            }),
+        )
+
+    def test_appendix_creation(self):
+        appendix = generate_jwt_appendix()
+        self.verify_appendix(appendix)
+
     def test_can_append_request(self):
+        data = {
+            "name": "Sponge Bob",
+            "job": "Cook",
+        }
+
+        # making test request
+        expected = post(UPSTREAM, data=data)
+
         with app.test_client() as client:
             # send data as POST form to endpoint
-            expected = {'return_url': 'my_test_url'}
-            raw_result = client.post('/', data=expected)
-            result = json.loads(raw_result.data.decode("utf-8"))
+            result = client.post('/', data=data)
 
-            # checking if appended JWT is correct
-            appendix = jwt.decode(
-                result['x-my-jwt'],
-                SECRET,
-                algorithms=['HS512'],
-            )
-            iat = appendix['iat']
-            jti = appendix['jti']
-            payload = appendix['payload']
-            self.assertEqual(
-                type(iat),
-                int,
-            )
-            self.assertEqual(
-                type(jti),
-                str,
-            )
-            self.assertEqual(
-                json.dumps(payload),
-                json.dumps({
-                    "user": "username",
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                }),
-            )
+            # TODO verify response to see if they are the same
 
-            # checking if remaining payload is intact
-            del result['x-my-jwt']
-            self.assertEqual(
-                json.dumps(result),
-                json.dumps(expected),
-            )
+            # verifying header
+            self.verify_appendix(result.headers['x-my-jwt'])
 
     def test_generate_cryptographic_nonces(self):
         previous_nonce = None
