@@ -6,16 +6,18 @@ from random import randint
 from flask import (
     Flask,
     request,
-    Response,
 )
 import jwt
+from requests import post
 
 
 SECRETS = dict()
 SECRET = "TODO LOAD SECRET"
+UPSTREAM = "https://reqres.in/api/users"
 with open("./config/secrets.json") as fp:
     SECRETS = json.loads(fp.read())
     SECRET = SECRETS.get('JWT_SECRET', 'FAILED TO LOAD SECRET')
+    UPSTREAM = SECRETS.get('UPSTREAM', UPSTREAM)
 app = Flask(__name__)
 
 
@@ -24,9 +26,7 @@ def generate_cryptographic_nonce(length=17):
     return ''.join([str(randint(0, 9)) for i in range(length)])
 
 
-@app.route('/', methods=['POST'])
-def index():
-    # creating appendix
+def generate_jwt_appendix():
     appendix = {
         'iat': int(time()),
         'jti': generate_cryptographic_nonce(),
@@ -35,16 +35,21 @@ def index():
             "date": datetime.now().strftime("%Y-%m-%d"),
         },
     }
-    my_jwt = jwt.encode(appendix, SECRET, algorithm='HS512')
+    return jwt.encode(appendix, SECRET, algorithm='HS512')
 
-    # appending JWT to POST request
-    form = dict(request.form)
-    form['x-my-jwt'] = my_jwt.decode('utf-8')
 
+@app.route('/', methods=['POST'])
+def index():
     # generating response
-    return Response(
-        response=json.dumps(form),
-        mimetype='application/json',
+    response = post(UPSTREAM, data=request.data, headers=request.headers)
+
+    # appending header to response
+    response.headers['x-my-jwt'] = generate_jwt_appendix()
+
+    return (
+        response.content,
+        response.status_code,
+        response.headers.items(),
     )
 
 
