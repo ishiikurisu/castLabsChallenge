@@ -67,11 +67,24 @@ class TestProxy(TestCase):
         self.verify_appendix(result.headers['x-my-jwt'])
 
     def test_generate_cryptographic_nonces(self):
-        previous_nonce = None
+        previous_nonces = set()
         for _ in range(10000):
             new_nonce = generate_cryptographic_nonce()
-            self.assertNotEqual(previous_nonce, new_nonce)
-            previous_nonce = new_nonce
+            self.assertTrue(new_nonce not in previous_nonces)
+            previous_nonces.add(new_nonce)
+
+    def test_status_page(self):
+        with app.test_client() as client:
+            response = client.get('/status')
+            status = json.loads(response.data.decode('utf-8'))
+            checkpoint = status['from_start']
+
+            for i in range(0, 500):
+                response = client.get('/status')
+                status = json.loads(response.data.decode('utf-8'))
+                from_start = status['from_start']
+                self.assertTrue(from_start > checkpoint)
+                checkpoint = from_start
 
 
 if __name__ == '__main__':

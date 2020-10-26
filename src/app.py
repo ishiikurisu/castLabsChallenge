@@ -2,8 +2,10 @@ import json
 from time import time
 from datetime import datetime
 from random import randint
+import sqlite3
 
 from flask import (
+    jsonify,
     Flask,
     request,
     Response,
@@ -12,9 +14,11 @@ import jwt
 from requests import post
 
 
+# SETUP ENVIRONMENT
 SECRETS = dict()
 SECRET = "TODO LOAD SECRET"
 UPSTREAM = "TODO LOAD UPSTREAM"
+FROM_START = time()
 with open("./config/secrets.json") as fp:
     SECRETS = json.loads(fp.read())
     SECRET = SECRETS.get('JWT_SECRET', 'FAILED TO LOAD SECRET')
@@ -40,10 +44,8 @@ def generate_jwt_appendix():
 
 
 def proxy_post(url, data, headers):
-    # generating response
     response = post(url, data=data, headers=headers)
 
-    # appending header to response
     response.headers['x-my-jwt'] = generate_jwt_appendix()
 
     return Response(
@@ -60,6 +62,13 @@ def index():
         data=request.data,
         headers=request.headers,
     )
+
+
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({
+        "from_start": time() - FROM_START,
+    })
 
 
 if __name__ == '__main__':
