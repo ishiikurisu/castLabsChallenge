@@ -5,7 +5,8 @@ This is my take on the [castLabs programming task](https://github.com/castlabs/p
 This repo implements a [RFC2616](https://www.ietf.org/rfc/rfc2616.txt) proxy
 that appends a new field to the request as specified in the task.
 
-## Initial Setup
+
+## Prepare
 
 Create a JSON file named `config/secrets.json` with the proxy's secrets.
 It may contain one of the following fields:
@@ -22,9 +23,22 @@ It should look like this:
 }
 ```
 
+## Execute
+
+It's possible to use Docker to execute the application using Docker:
+
+```
+docker-compose build
+docker-compose up
+```
+
+This will start the application on port 5000.
+
+
 ## Develop
 
-It's recommended to use virtualenv to execute the app locally. On Unix systems:
+It's recommended to use `virtualenv` to execute the app locally.
+On Unix systems, you can use the following:
 
 ``` sh
 python3 -m virtualenv venv -p python3
