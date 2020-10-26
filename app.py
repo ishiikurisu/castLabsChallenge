@@ -9,7 +9,11 @@ from flask import (
 import jwt
 
 
-SECRET = 'TODO load secret'
+SECRETS = dict()
+SECRET = "TODO LOAD SECRET"
+with open("./config/secrets.json") as fp:
+    SECRETS = json.loads(fp.read())
+    SECRET = SECRETS.get('JWT_SECRET', 'FAILED TO LOAD SECRET')
 app = Flask(__name__)
 
 
@@ -43,4 +47,4 @@ def index():
 
 
 if __name__ == '__main__':
-   app.run()
+    app.run()
