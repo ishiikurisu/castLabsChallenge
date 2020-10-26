@@ -1,5 +1,6 @@
 import json
 from time import time
+from datetime import datetime
 
 from flask import (
     Flask,
@@ -26,7 +27,7 @@ def index():
         'jti': generate_cryptographic_nonce(),
         'payload': {
             "user": "username",
-            "date": "todays date",
+            "date": datetime.now().strftime("%Y-%m-%d"),
         },
     }
     my_jwt = jwt.encode(appendix, SECRET, algorithm='HS512')
