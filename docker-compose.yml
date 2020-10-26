@@ -1,0 +1,8 @@
+version: '3'
+services:
+    proxy:
+        build: .
+        command:
+            - ./start.sh
+        ports:
+            - "5000:5000"
