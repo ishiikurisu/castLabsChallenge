@@ -73,6 +73,14 @@ class TestProxy(TestCase):
             self.assertNotEqual(previous_nonce, new_nonce)
             previous_nonce = new_nonce
 
+    def test_status_page(self):
+        with app.test_client() as client:
+            for i in range(1, 500):
+                response = client.get('/status')
+                status = json.loads(response.data.decode('utf-8'))
+                self.assertEqual(type(status['from_start']), float)
+                self.assertEqual(status['processed_requests'], i)
+
 
 if __name__ == '__main__':
     main()
