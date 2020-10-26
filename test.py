@@ -4,7 +4,7 @@ import jwt
 from time import time
 from datetime import datetime
 
-from app import app, SECRET
+from app import *
 
 
 # sets the app to testing mode
@@ -38,7 +38,7 @@ class TestProxy(TestCase):
             )
             self.assertEqual(
                 type(jti),
-                int,
+                str,
             )
             self.assertEqual(
                 json.dumps(payload),
@@ -54,6 +54,13 @@ class TestProxy(TestCase):
                 json.dumps(result),
                 json.dumps(expected),
             )
+
+    def test_generate_cryptographic_nonces(self):
+        previous_nonce = None
+        for _ in range(10000):
+            new_nonce = generate_cryptographic_nonce()
+            self.assertNotEqual(previous_nonce, new_nonce)
+            previous_nonce = new_nonce
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import json
 from time import time
 from datetime import datetime
+from random import randint
 
 from flask import (
     Flask,
@@ -18,9 +19,9 @@ with open("./config/secrets.json") as fp:
 app = Flask(__name__)
 
 
-def generate_cryptographic_nonce():
-    # TODO improve crpytographic nonce
-    return 123
+def generate_cryptographic_nonce(length=17):
+    # this function's strategy was extracted from `python-oauth2`
+    return ''.join([str(randint(0, 9)) for i in range(length)])
 
 
 @app.route('/', methods=['POST'])
