@@ -8,8 +8,8 @@ that appends a new field to the request as specified in the task.
 
 ## Prepare
 
-Create a JSON file named `config/secrets.json` with the proxy's secrets.
-It may contain one of the following fields:
+Create a JSON file named `config/secrets.json` inside the `src` folder 
+with the proxy's secrets. It may contain one of the following fields:
 
 - `JWT_SECRET` with the secret hex string for the appended JWT
 - `UPSTREAM` with the upstrea URL for this proxy.
@@ -57,3 +57,10 @@ To execute the program locally:
 export FLASK_APP=app.py
 flask run
 ```
+
+### Testing
+
+There are 2 implemented test suites:
+
+- Running `make test` will execute a couple of unit tests for common functionalities;
+- Running `make stress` will verify a proxy that's deployed in another server to verify it works as expected;
