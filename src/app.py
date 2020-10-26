@@ -59,7 +59,7 @@ def proxy_post(url, data, headers):
 def index():
     return proxy_post(
         url=UPSTREAM,
-        data=request.data,
+        data=request.form,
         headers=request.headers,
     )
 

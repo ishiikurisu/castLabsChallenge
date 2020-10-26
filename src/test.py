@@ -73,6 +73,33 @@ class TestProxy(TestCase):
             self.assertTrue(new_nonce not in previous_nonces)
             previous_nonces.add(new_nonce)
 
+    def test_work_with_server(self):
+        data = {
+            "name": "Sponge Bob",
+            "job": "Cook",
+        }
+
+        expected = post("https://postman-echo.com/post", data=data)
+
+        with app.test_client() as client:
+            result = client.post("/", data=data)
+
+            self.assertEqual(expected.status_code, result.status_code)
+
+            # postman echo includes the response inside this "json" field
+            result_data = json.loads(result.data.decode("UTF-8"))['json']
+            expected_data = json.loads(expected.text)['json']
+
+            # note that it's not possible to compare the responses directly
+            # because postman-echo includes some fields with random values
+            self.assertEqual(expected_data['name'], result_data['name'])
+            self.assertEqual(expected_data['job'], result_data['job'])
+            self.assertEqual(data['name'], result_data['name'])
+            self.assertEqual(data['job'], result_data['job'])
+
+            self.verify_appendix(result.headers['x-my-jwt'])
+
+
     def test_status_page(self):
         with app.test_client() as client:
             response = client.get('/status')

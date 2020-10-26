@@ -10,3 +10,6 @@ run:
 
 test:
 	python -m unittest test.py
+
+stress:
+	python -m unittest  stress.py
